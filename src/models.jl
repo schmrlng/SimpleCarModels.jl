@@ -128,29 +128,29 @@ end
     end
 end
 
-### Steering
-abstract type SimpleCarDirectionality end
-struct ForwardsOnly <: SimpleCarDirectionality end
-struct Bidirectional <: SimpleCarDirectionality end
-struct TurningRadius{D<:SimpleCarDirectionality,T<:AbstractFloat} <: SteeringParams
-    r::T
-end
-struct MaxCurvature{D<:SimpleCarDirectionality,T<:AbstractFloat} <: SteeringParams
-    κ_max::T
-end
-TurningRadius(p::MaxCurvature{D,T}) where {D,T} = TurningRadius{D,T}(1/p.κ_max)
-MaxCurvature(p::TurningRadius{D,T}) where {D,T} = MaxCurvature{D,T}(1/p.κ_max)
-
-struct MaxCurvatureAndCurvatureRate{D<:SimpleCarDirectionality,T<:AbstractFloat} <: SteeringParams
-    κ_max::T
-    σ_max::T
-end
-
-function SteeringBVP(f::SimpleCarDynamics{0,0,T}, j::Time,
-                     r::T, ::Type{D} = ForwardsOnly) where {T,D<:SimpleCarDirectionality}
-    SteeringBVP(f, j, TurningRadius{D,T}(r))
-end
-function SteeringBVP(f::SimpleCarDynamics{0,1,T}, j::Time,
-                     κ_max::T, σ_max::T, ::Type{D} = ForwardsOnly) where {T,D<:SimpleCarDirectionality}
-    SteeringBVP(f, j, TurningRadius{D,T}(r))
-end
+# ### Steering
+# abstract type SimpleCarDirectionality end
+# struct ForwardsOnly <: SimpleCarDirectionality end
+# struct Bidirectional <: SimpleCarDirectionality end
+# struct TurningRadius{D<:SimpleCarDirectionality,T<:AbstractFloat} <: SteeringParams
+#     r::T
+# end
+# struct MaxCurvature{D<:SimpleCarDirectionality,T<:AbstractFloat} <: SteeringParams
+#     κ_max::T
+# end
+# TurningRadius(p::MaxCurvature{D,T}) where {D,T} = TurningRadius{D,T}(1/p.κ_max)
+# MaxCurvature(p::TurningRadius{D,T}) where {D,T} = MaxCurvature{D,T}(1/p.κ_max)
+#
+# struct MaxCurvatureAndCurvatureRate{D<:SimpleCarDirectionality,T<:AbstractFloat} <: SteeringParams
+#     κ_max::T
+#     σ_max::T
+# end
+#
+# function SteeringBVP(f::SimpleCarDynamics{0,0,T}, j::Time,
+#                      r::T, ::Type{D} = ForwardsOnly) where {T,D<:SimpleCarDirectionality}
+#     SteeringBVP(f, j, TurningRadius{D,T}(r))
+# end
+# function SteeringBVP(f::SimpleCarDynamics{0,1,T}, j::Time,
+#                      κ_max::T, σ_max::T, ::Type{D} = ForwardsOnly) where {T,D<:SimpleCarDirectionality}
+#     SteeringBVP(f, j, TurningRadius{D,T}(r))
+# end
