@@ -1,4 +1,4 @@
-julia 0.6
-StaticArrays
-SpecialFunctions
+julia 0.7
+StaticArrays 0.8.2
 DifferentialDynamicsModels
+SpecialFunctions 0.7.0

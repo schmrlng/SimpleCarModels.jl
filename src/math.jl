@@ -1,15 +1,4 @@
-using SpecialFunctions
-export adiff, mod2piF, fresnelS, fresnelC
-
-if !isdefined(:sincos)    # sincos will exist in Julia 0.7
-    @inline sincos(x) = sin(x), cos(x)
-end
-@inline mod2piF(x::T) where {T<:AbstractFloat} = mod(x, 2*T(pi))
-@inline function adiff(x::T, y::T) where {T<:AbstractFloat}
-    d = mod2piF(x - y)
-    d <= π ? d : d - 2*T(π)
-end
-function fresnelS0(x::T) where {T<:AbstractFloat}
+function fresnelS0(x::T) where {T}
     x2 = x*x
     x4 = x2*x2
     n = @evalpoly(x4, T(3.18016297876567817986E11),
@@ -27,7 +16,7 @@ function fresnelS0(x::T) where {T<:AbstractFloat}
                       T(1))
     x*x2*n/d
 end
-function fresnelC0(x::T) where {T<:AbstractFloat}
+function fresnelC0(x::T) where {T}
     x2 = x*x
     x4 = x2*x2
     n = @evalpoly(x4, T(9.99999999999999998822E-1),
@@ -45,5 +34,5 @@ function fresnelC0(x::T) where {T<:AbstractFloat}
                       T(3.99982968972495980367E-12))
     x*n/d
 end
-fresnelS(x::T) where {T<:AbstractFloat} = x < T(1.6) ? fresnelS0(x) : imag((1+im)*erf(x*sqrt(T(pi))*(1 - im)/2)/2)
-fresnelC(x::T) where {T<:AbstractFloat} = x < T(1.6) ? fresnelC0(x) : real((1+im)*erf(x*sqrt(T(pi))*(1 - im)/2)/2)
+fresnelS(x::T) where {T} = x < T(1.6) ? fresnelS0(x) : imag((1 + im)*erf(x*sqrt(T(pi))*(1 - im)/2)/2)
+fresnelC(x::T) where {T} = x < T(1.6) ? fresnelC0(x) : real((1 + im)*erf(x*sqrt(T(pi))*(1 - im)/2)/2)

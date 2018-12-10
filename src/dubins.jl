@@ -1,61 +1,51 @@
 export dubins, dubins_length, dubins_waypoints
 
-dubins_length(q1::SE2State{T}, q2::SE2State{T}, r::T = T(1)) where {T} = dubins(q1, q2, r)[1]
-function dubins_waypoints(q1::SE2State{T}, q2::SE2State{T}, dt_or_N::Union{T,Int}, r::T = T(1), v::T = T(1)) where {T}
-    ctrl = dubins(q1, q2, r, v)[2]
-    waypoints(SimpleCarDynamics{0,0,T}(), q1, ctrl, dt_or_N)
+dubins_length(q0::StaticVector{3}, qf::StaticVector{3}; r=1) = dubins(q0, qf, r=r).cost
+function dubins_waypoints(q0::StaticVector{3}, qf::StaticVector{3}, dt_or_N; v=1, r=1)
+    waypoints(SimpleCarDynamics{0,0}(), SE2State(q0), dubins(q0, qf, v=v, r=r).controls, dt_or_N)
 end
 
-@inline scaleradius(c::VelocityCurvatureStep{T}, α::T) where {T} = StepControl(c.t*α, VelocityCurvatureControl(c.u.v, c.u.κ/α))
-@inline scalespeed(c::VelocityCurvatureStep{T}, λ::T) where {T} = StepControl(c.t/λ, VelocityCurvatureControl(c.u.v*λ, c.u.κ))
-@inline carsegment2stepcontrol(t::Int, d::T) where {T} = StepControl(abs(d), VelocityCurvatureControl(T(sign(d)), T(t)))
-
-function dubins(q1::SE2State{T},
-                q2::SE2State{T},
-                r::T = T(1),
-                v::T = T(1)) where {T<:AbstractFloat}
-    dx = (q2.x - q1.x) / r
-    dy = (q2.y - q1.y) / r
-    d = sqrt(abs2(dx) + abs2(dy))
-    th = atan2(dy, dx)
-    a = q1.θ - th
-    b = q2.θ - th
+function dubins((x0, y0, θ0)::StaticVector{3,T0}, (xf, yf, θf)::StaticVector{3,Tf}; v=1, r::R=1) where {T0,Tf,R}
+    T = promote_type(T0, Tf, R)
+    dx = (xf - x0)/r
+    dy = (yf - y0)/r
+    d = hypot(dx, dy)
+    θ = atan(dy, dx)
+    a = θ0 - θ
+    b = θf - θ
     sa, ca = sincos(a)
     sb, cb = sincos(b)
-    cmin = T(Inf)
-    ctrl = zeros(SVector{3,VelocityCurvatureStep{T}})
 
     # LSL
     tmp = 2 + d*d - 2*(ca*cb + sa*sb - d*(sa - sb))
     if tmp >= 0
-        th = atan2(cb - ca, d + sa - sb)
-        t = mod2piF(-a + th)
-        p = sqrt(max(tmp, T(0)))
-        q = mod2piF(b - th)
+        θ = atan(cb - ca, d + sa - sb)
+        t = mod2piF(-a + θ)
+        p = sqrt(max(tmp, 0))
+        q = mod2piF(b - θ)
         c = t + p + q
-        if c < cmin
-            cmin = c
-            ctrl = SVector(
-                carsegment2stepcontrol(1, t),
-                carsegment2stepcontrol(0, p),
-                carsegment2stepcontrol(1, q)
-            )
-        end
+
+        cmin = c
+        ctrl = SVector(
+            carsegment2stepcontrol(1, t),
+            carsegment2stepcontrol(0, p),
+            carsegment2stepcontrol(1, q)
+        )
     end
 
     # RSR
     tmp = 2 + d*d - 2*(ca*cb + sa*sb - d*(sb - sa))
     if tmp >= 0
-        th = atan2(ca - cb, d - sa + sb)
-        t = mod2piF(a - th)
-        p = sqrt(max(tmp, T(0)))
-        q = mod2piF(-b + th)
+        θ = atan(ca - cb, d - sa + sb)
+        t = mod2piF(a - θ)
+        p = sqrt(max(tmp, 0))
+        q = mod2piF(-b + θ)
         c = t + p + q
         if c < cmin
             cmin = c
             ctrl = SVector(
                 carsegment2stepcontrol(-1, t),
-                carsegment2stepcontrol(0, p),
+                carsegment2stepcontrol( 0, p),
                 carsegment2stepcontrol(-1, q)
             )
         end
@@ -64,17 +54,17 @@ function dubins(q1::SE2State{T},
     # RSL
     tmp = d*d - 2 + 2*(ca*cb + sa*sb - d*(sa + sb))
     if tmp >= 0
-        p = sqrt(max(tmp, T(0)))
-        th = atan2(ca + cb, d - sa - sb) - atan2(T(2), p)
-        t = mod2piF(a - th)
-        q = mod2piF(b - th)
+        p = sqrt(max(tmp, 0))
+        θ = atan(ca + cb, d - sa - sb) - atan(T(2), p)
+        t = mod2piF(a - θ)
+        q = mod2piF(b - θ)
         c = t + p + q
         if c < cmin
             cmin = c
             ctrl = SVector(
                 carsegment2stepcontrol(-1, t),
-                carsegment2stepcontrol(0, p),
-                carsegment2stepcontrol(1, q)
+                carsegment2stepcontrol( 0, p),
+                carsegment2stepcontrol( 1, q)
             )
         end
     end
@@ -82,57 +72,57 @@ function dubins(q1::SE2State{T},
     # LSR
     tmp = -2 + d*d + 2*(ca*cb + sa*sb + d*(sa + sb))
     if tmp >= 0
-        p = sqrt(max(tmp, T(0)))
-        th = atan2(-ca - cb, d + sa + sb) - atan2(-T(2), p)
-        t = mod2piF(-a + th)
-        q = mod2piF(-b + th)
+        p = sqrt(max(tmp, 0))
+        θ = atan(-ca - cb, d + sa + sb) - atan(-T(2), p)
+        t = mod2piF(-a + θ)
+        q = mod2piF(-b + θ)
         c = t + p + q
         if c < cmin
             cmin = c
             ctrl = SVector(
-                carsegment2stepcontrol(1, t),
-                carsegment2stepcontrol(0, p),
+                carsegment2stepcontrol( 1, t),
+                carsegment2stepcontrol( 0, p),
                 carsegment2stepcontrol(-1, q)
             )
         end
     end
 
     # RLR
-    tmp = (6 - d*d  + 2*(ca*cb + sa*sb + d*(sa - sb))) / 8
+    tmp = (6 - d*d  + 2*(ca*cb + sa*sb + d*(sa - sb)))/8
     if abs(tmp) < 1
         p = 2*T(pi) - acos(tmp)
-        th = atan2(ca - cb, d - sa + sb)
-        t = mod2piF(a - th + p/2)
+        θ = atan(ca - cb, d - sa + sb)
+        t = mod2piF(a - θ + p/2)
         q = mod2piF(a - b - t + p)
         c = t + p + q
         if c < cmin
             cmin = c
             ctrl = SVector(
                 carsegment2stepcontrol(-1, t),
-                carsegment2stepcontrol(1, p),
+                carsegment2stepcontrol( 1, p),
                 carsegment2stepcontrol(-1, q)
             )
         end
     end
 
     # LRL
-    tmp = (6 - d*d  + 2*(ca*cb + sa*sb - d*(sa - sb))) / 8
+    tmp = (6 - d*d  + 2*(ca*cb + sa*sb - d*(sa - sb)))/8
     if abs(tmp) < 1
         p = 2*T(pi) - acos(tmp)
-        th = atan2(-ca + cb, d + sa - sb)
-        t = mod2piF(-a + th + p/2)
+        θ = atan(-ca + cb, d + sa - sb)
+        t = mod2piF(-a + θ + p/2)
         q = mod2piF(b - a - t + p)
         c = t + p + q
         if c < cmin
             cmin = c
             ctrl = SVector(
-                carsegment2stepcontrol(1, t),
+                carsegment2stepcontrol( 1, t),
                 carsegment2stepcontrol(-1, p),
-                carsegment2stepcontrol(1, q)
+                carsegment2stepcontrol( 1, q)
             )
         end
     end
 
     ctrl = scalespeed.(scaleradius.(ctrl, r), v)
-    cmin*r, ctrl
+    (cost=cmin*r/v, controls=ctrl)
 end
