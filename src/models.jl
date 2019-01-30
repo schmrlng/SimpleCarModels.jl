@@ -4,6 +4,7 @@ export SimpleCarDynamics
 export SE2State, SE2vState, SE2κState, SE2vκState
 export VelocityCurvatureControl, AccelerationCurvatureControl, VelocityCurvRateControl, AccelerationCurvRateControl
 export VelocityCurvatureStep, VelocityCurvRateStep
+export DubinsSteering, ReedsSheppSteering, DubinsCCSteering
 
 # Simple Car Dynamics (with integrators in speed v and curvature κ)
 struct SimpleCarDynamics{Dv,Dκ} <: DifferentialDynamics end
@@ -121,9 +122,9 @@ end
 const DubinsSteering{T} = SteeringBVP{SimpleCarDynamics{0,0},Time,DubinsConstraints{T}}
 const ReedsSheppSteering{T} = SteeringBVP{SimpleCarDynamics{0,0},Time,ReedsSheppConstraints{T}}
 const DubinsCCSteering{T} = SteeringBVP{SimpleCarDynamics{0,1},Time,DubinsCCConstraints{T}}
-DubinsSteering(; v=1, r=1) = SteeringBVP(SimpleCarDynamics{0,0}(), Time(), constraints=DubinsConstraints(v, r))
-ReedsSheppSteering(; v=1, r=1) = SteeringBVP(SimpleCarDynamics{0,0}(), Time(), constraints=ReedsSheppConstraints(v, r))
-DubinsCCSteering(; v=1, κ_max=1, σ_max=1) = SteeringBVP(SimpleCarDynamics{0,1}(), Time(), constraints=DubinsCCConstraints(v, κ_max, σ_max))
+DubinsSteering(; v=1, r=1) = SteeringBVP(SimpleCarDynamics{0,0}(), Time(), constraints=DubinsConstraints(promote(v, r)...))
+ReedsSheppSteering(; v=1, r=1) = SteeringBVP(SimpleCarDynamics{0,0}(), Time(), constraints=ReedsSheppConstraints(promote(v, r)...))
+DubinsCCSteering(; v=1, κ_max=1, σ_max=1) = SteeringBVP(SimpleCarDynamics{0,1}(), Time(), constraints=DubinsCCConstraints(promote(v, κ_max, σ_max)...))
 function (bvp::DubinsSteering)(q0::StaticVector{3}, qf::StaticVector{3})
     dubins(q0, qf, v=bvp.constraints.v_max, r=bvp.constraints.r)
 end

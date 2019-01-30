@@ -16,6 +16,7 @@ function dubins((x0, y0, θ0)::StaticVector{3,T0}, (xf, yf, θf)::StaticVector{3
     sa, ca = sincos(a)
     sb, cb = sincos(b)
 
+    cmin = T(Inf)
     # LSL
     tmp = 2 + d*d - 2*(ca*cb + sa*sb - d*(sa - sb))
     if tmp >= 0

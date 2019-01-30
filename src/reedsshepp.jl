@@ -115,7 +115,7 @@ end
 @inline R(x::T, y::T) where {T} = hypot(x, y), atan(y, x)
 @inline function M(t::T) where {T}
     m = mod2piF(t)
-    ifelse(m > pi, m - 2*T(pi) : m)
+    ifelse(m > pi, m - 2*T(pi), m)
 end
 @inline function Tau(u::T, v::T, E::T, N::T) where {T}
     delta = u - v
@@ -279,7 +279,7 @@ end
     t = mod2piF(β + T(pi)/2)
     u = 2 - D
     u > 0 && return false, c, ctrl
-    v = mod2piF(-pi - tθ + β) - 2*T(pi)
+    v = mod2piF(-T(pi) - tθ + β) - 2*T(pi)
     cnew = t + T(pi)/2 - u - v
     c <= cnew && return false, c, ctrl
     ctrl = SVector(

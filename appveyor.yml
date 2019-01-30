@@ -1,6 +1,5 @@
 environment:
   matrix:
-  - julia_version: 0.7
   - julia_version: 1
   - julia_version: nightly
 
@@ -28,7 +27,6 @@ install:
 
 build_script:
   - echo "%JL_BUILD_SCRIPT%"
-  - C:\julia\bin\julia -e "import Pkg; Pkg.clone(\"https://github.com/schmrlng/DifferentialDynamicsModels.jl.git\")"
   - C:\julia\bin\julia -e "%JL_BUILD_SCRIPT%"
 
 test_script:

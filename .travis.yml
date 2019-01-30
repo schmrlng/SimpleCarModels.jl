@@ -4,15 +4,13 @@ os:
   - linux
   - osx
 julia:
-  - 0.7
   - 1.0
+  - 1.1
   - nightly
 matrix:
   allow_failures:
     - julia: nightly
 notifications:
   email: false
-before_script:
-  - julia --project -e 'import Pkg; Pkg.clone("https://github.com/schmrlng/DifferentialDynamicsModels.jl.git")'
 after_success:
   - julia --project -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
